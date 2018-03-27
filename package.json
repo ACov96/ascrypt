@@ -1,0 +1,15 @@
+{
+  "name": "ascrypt",
+  "version": "1.0.0",
+  "description": "A JavaScript dialect design with async first",
+  "main": "ascrypt.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Alexander Covington",
+  "license": "ISC",
+  "dependencies": {
+    "jison": "^0.4.18",
+    "lex": "^1.7.9"
+  }
+}
