@@ -21,6 +21,12 @@
 "/"                   return 'DIVIDE'
 "-"                   return 'MINUS'
 "+"                   return 'PLUS'
+"+="                  return 'PLUSEQ'
+"-="                  return 'MINUSEQ'
+"*="                  return 'MULTEQ'
+"/="                  return 'DIVEQ'
+"++"                  return 'INCR'
+"--"                  return 'DECR'
 "("                   return 'LPAREN'
 ")"                   return 'RPAREN'
 "{"                   return 'LBRACE'
@@ -33,6 +39,7 @@
 ":"                   return 'COLON'
 "="                   return 'ASSIGN'
 "=="                  return 'EQ'
+"==="                 return 'LEQ'
 "!="                  return 'NEQ'
 ">"                   return 'GT'
 ">="                  return 'GTE'
@@ -51,9 +58,12 @@
 
 /lex
 
-%left 'PLUS' 'MINUS'
-%left 'MULTIPLY' 'DIVIDE'
+%right ASSIGN
+%nonassoc EQ NEQ LT LTE GT GTE
+%left PLUS MINUS
+%left MULTIPLY DIVIDE
 %left UMINUS
+
 
 %start expressions
 %%
@@ -70,10 +80,45 @@ e: exp e
 
 exp: dec
 | NUMBER
+| varexp
+| op
 ;
 
-dec: synctype vardec SEMICOLON
-| vardec SEMICOLON
+op: algop
+|   logop
+|   compop
+;
+
+algop: optarget PLUS optarget
+|      optarget MINUS optarget
+|      optarget MULTIPLY optarget
+|      optarget DIVIDE optarget
+|      optarget INCR
+|      optarget DECR
+|      optarget PLUSEQ optarget
+|      optarget MINUSEQ optarget
+|      optarget MULTEQ optarget
+|      optarget DIVEQ optarget
+;
+
+logop: optarget AND optarget
+|      optarget OR  optarget
+;
+
+compop: optarget GT optarget
+|       optarget GTE optarget
+|       optarget LT optarget
+|       optarget LTE optarget
+|       optarget EQ  optarget
+|       optarget NEQ optarget
+;
+
+optarget: NUMBER
+|         varexp
+;
+
+dec: synctype vardec 
+| vardec 
 | synctype fundec
 | fundec 
 ;
@@ -92,8 +137,11 @@ varexp: varid
 varid: ID
 ;
 
-fundec: FUNCTION ID LPAREN arglist RPAREN LBRACE e RBRACE
-|       FUNCTION LPAREN arglist RPAREN LBRACE e RBRACE
+fundec: FUNCTION ID LPAREN arglist RPAREN LBRACE funbody RBRACE
+|       FUNCTION LPAREN arglist RPAREN LBRACE funbody RBRACE
+;
+
+funbody: e returnexp
 ;
 
 arglist: empty
@@ -102,4 +150,9 @@ arglist: empty
 
 recarglist: empty
 |           COMMA varid recarglist
+;
+
+returnexp: RETURN 
+|          RETURN exp
+|          empty
 ;

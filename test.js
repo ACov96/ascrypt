@@ -1,1 +1,4 @@
-function test(){1}
+function test(){
+    var test = 1
+    return test
+}
