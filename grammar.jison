@@ -68,18 +68,37 @@
 %start expressions
 %%
 
-expressions: expList EOF {return $1;}	
+
+expressions: eList EOF {return $1;}	
 ;
 
 empty: /* empty */
 ;
 
-expList: exp expList
+eList: exp eList
 | empty
 ;
 
-exp: NUMBER
-|    dec
+exp: dec
+| op
+| call
+;
+
+call: ID LPAREN callarglist RPAREN
+;
+
+callarglist: empty
+| calltarget callListRec
+;
+
+callListRec: COMMA calltarget callListRec
+| empty
+;
+
+calltarget: optarget
+;
+
+number: NUMBER
 ;
 
 /* op: algop */
@@ -99,9 +118,9 @@ exp: NUMBER
 /* |      exp DIVEQ exp */
 /* ; */
 
-/* logop: exp AND exp */
-/* |      exp OR  exp */
-/* ; */
+logop: optarget AND optarget
+|      optarget OR optarget
+;
 
 /* compop: exp GT exp */
 /* |       exp GTE exp */
@@ -111,6 +130,9 @@ exp: NUMBER
 /* |       exp NEQ exp */
 /* ; */
 
+optarget: number
+|         varid
+;
 
 dec: synctype vardec
 | vardec
@@ -121,9 +143,13 @@ dec: synctype vardec
 synctype: ASYNC | SYNC
 ;
 
-vardec: VAR varexp ASSIGN exp
-|       LET varexp ASSIGN exp
-|       CONST varexp ASSIGN exp
+vardec: VAR varexp ASSIGN vartarget
+|       LET varexp ASSIGN vartarget
+|       CONST varexp ASSIGN vartarget
+;
+
+vartarget: optarget
+| exp
 ;
 
 varexp: varid
@@ -136,7 +162,7 @@ fundec: FUNCTION ID LPAREN arglist RPAREN LBRACE funbody RBRACE
 |       FUNCTION LPAREN arglist RPAREN LBRACE funbody RBRACE
 ;
 
-funbody: expList returnexp
+funbody: eList returnexp
 ;
 
 arglist: empty
@@ -148,6 +174,7 @@ recarglist: empty
 ;
 
 returnexp: RETURN
-|          RETURN exp
+|          RETURN optarget
 |          empty
 ;
+
