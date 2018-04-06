@@ -98,83 +98,101 @@ callListRec: COMMA calltarget callListRec
 calltarget: optarget
 ;
 
-number: NUMBER
+number: NUMBER {$$ = {type: 'number', val: $1};}
 ;
 
-/* op: algop */
-/* |   logop */
-/* |   compop */
-/* ; */
-
-/* algop: exp PLUS exp */
-/* |      exp MINUS exp */
-/* |      exp MULTIPLY exp */
-/* |      exp DIVIDE exp */
-/* |      exp INCR */
-/* |      exp DECR */
-/* |      exp PLUSEQ exp */
-/* |      exp MINUSEQ exp */
-/* |      exp MULTEQ exp */
-/* |      exp DIVEQ exp */
-/* ; */
-
-logop: optarget AND optarget
-|      optarget OR optarget
+op: algop
+|   logop
+|   compop
 ;
 
-/* compop: exp GT exp */
-/* |       exp GTE exp */
-/* |       exp LT exp */
-/* |       exp LTE exp */
-/* |       exp EQ  exp */
-/* |       exp NEQ exp */
-/* ; */
-
-optarget: number
-|         varid
+algopSymbol: PLUS {$$ = 'plus';}
+| MINUS {$$ = 'minus';}
+| MULTIPLY {$$ = 'multiply';}
+| DIVIDE {$$ = 'divide';}
+| PLUSEQ {$$ = 'pluseq';}
+| MINUSEQ {$$ = 'minuseq';}
+| MULTEQ {$$ = 'multeq';}
+| DIVEQ {$$ = 'diveq';}
 ;
 
-dec: synctype vardec
-| vardec
-| synctype fundec
-| fundec
+algopAugment: INCR {$$ = 'incr';}
+| DECR {$$ = 'decr';}
 ;
 
-synctype: ASYNC | SYNC
+algop: optarget algopSymbol optarget {$$ = {type: 'algop', operation: $2, left: $1, right: $3};}
+|      optarget algopAugment {$$ = {type: 'algop', operation: $2, left: $1};}
 ;
 
-vardec: VAR varexp ASSIGN vartarget
-|       LET varexp ASSIGN vartarget
-|       CONST varexp ASSIGN vartarget
+logopSymbol: AND {$$ = 'and';}
+| OR {$$ = 'or';}
 ;
 
-vartarget: optarget
-| exp
+logop: optarget logopSymbol optarget {$$ = {type: 'logop', operation: $2, left: $1, right: $3};}
 ;
 
-varexp: varid
+compopSymbol: GT {$$ = 'gt';}
+| GTE {$$ = 'gte';}
+| LT {$$ = 'lt';}
+| LTE {$$ = 'lte';}
+| EQ {$$ = 'eq';}
+| NEQ {$$ = 'neq';}
 ;
 
-varid: ID
+compop: optarget compopSymbol optarget {$$ = {type: 'compop', operation: $2, left: $1, right:$3};}
 ;
 
-fundec: FUNCTION ID LPAREN arglist RPAREN LBRACE funbody RBRACE
-|       FUNCTION LPAREN arglist RPAREN LBRACE funbody RBRACE
+optarget: number {$$ = $1;}
+|         varid {$$ = $1;}
 ;
 
-funbody: eList returnexp
+dec: vardec {$$ = {type: 'dec', dec_type: 'var', dec: $1};}
+| synctype fundec {$$ = {type: 'dec', dec_type: 'fun', sync: $1, dec: $2};}
+| fundec {$$ = {type: 'dec', dec_type: 'fun', sync: 'async', dec: $1};}
 ;
 
-arglist: empty
-|        varid recarglist
+synctype: ASYNC {$$ = 'async';}
+| SYNC {$$ = 'sync';}
 ;
 
-recarglist: empty
-|           COMMA varid recarglist
+varScope: VAR {$$ = $1;}
+| LET {$$ = $1;}
+| CONST {$$ = $1;}
 ;
 
-returnexp: RETURN
-|          RETURN optarget
-|          empty
+varDecPrefix: synctype varScope {$$ = {sync: $1, scope: $2};}
+| varScope {$$ = {sync: 'async', scope: $1};}
+;
+
+vardec: varDecPrefix varexp ASSIGN vartarget {$$ = {type: 'vardec', options: $1, left: $2, right: $4};}
+;
+
+vartarget: optarget {$$ = $1;}
+| exp {$$ = $1;}
+;
+
+varexp: varid {$$ = $1;}
+;
+
+varid: ID {$$ = {type: 'id', val: $1};}
+;
+
+fundec: FUNCTION ID LPAREN arglist RPAREN LBRACE funbody RBRACE {$$ = {id: $2, args: $4, body: $7};}
+;
+
+funbody: eList returnexp {$$ = {type: 'funbody', body: $1, returnStm: $2};}
+;
+
+arglist: empty {$$ = null;}
+|        varid recarglist {$$ = {type: 'argList', head: $1, tail: $2};}
+;
+
+recarglist: empty {$$ = null;}
+|           COMMA varid recarglist {$$ = {type: 'argList', head: $2, tail: $3};}
+;
+
+returnexp: RETURN {$$ = {type: 'returnexp', return_val: null};}
+|          RETURN optarget {$$ = {type: 'returnexp', return_val: $2};}
+|          empty {$$ = null;}
 ;
 

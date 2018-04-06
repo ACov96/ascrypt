@@ -1,8 +1,4 @@
-<<<<<<< Updated upstream
-sync function test() {
-    var test = 1.0
-    return 1
+function test() {
+    var test = 1.0 + 1
+    return test
 }
-=======
-test(other, other, other)
->>>>>>> Stashed changes
