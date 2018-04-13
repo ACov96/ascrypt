@@ -72,16 +72,16 @@
 expressions: eList EOF {return $1;}	
 ;
 
-empty: /* empty */
+empty: /* empty */ {$$ = null;}
 ;
 
-eList: exp eList
-| empty
+eList: exp eList {$$ = {"type": 'eList', "head" : $1, "tail": $2};}
+| empty {$$ = null;}
 ;
 
-exp: dec
-| op
-| call
+exp: dec {$$ = {type: 'dec', body: $1};}
+| op {$$ = {type: 'op', body: $1};}
+| call {$$ = {type: 'call', body: $1};}
 ;
 
 call: ID LPAREN callarglist RPAREN
@@ -101,9 +101,9 @@ calltarget: optarget
 number: NUMBER {$$ = {type: 'number', val: $1};}
 ;
 
-op: algop
-|   logop
-|   compop
+op: algop {$$ = {type: 'op', body: $1};}
+|   logop {$$ = {type: 'op', body: $1};}
+|   compop {$$ = {type: 'op', body: $1};}
 ;
 
 algopSymbol: PLUS {$$ = 'plus';}
@@ -146,9 +146,9 @@ optarget: number {$$ = $1;}
 |         varid {$$ = $1;}
 ;
 
-dec: vardec {$$ = {type: 'dec', dec_type: 'var', dec: $1};}
-| synctype fundec {$$ = {type: 'dec', dec_type: 'fun', sync: $1, dec: $2};}
-| fundec {$$ = {type: 'dec', dec_type: 'fun', sync: 'async', dec: $1};}
+dec: vardec {$$ = {type: 'vardec', dec_body: $1};}
+| synctype fundec {$$ = {type: 'fundec', dec_type: 'fun', sync: $1, dec_body: $2};}
+| fundec {$$ = {type: 'fundec', dec_type: 'fun', sync: 'async', dec_body: $1};}
 ;
 
 synctype: ASYNC {$$ = 'async';}
