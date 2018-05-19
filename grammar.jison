@@ -16,7 +16,6 @@
 "break"               return 'BREAK'
 "null"                return 'NULL'
 "return"              return 'RETURN'
-"import"              return 'IMPORT'
 "*"                   return 'MULTIPLY'
 "/"                   return 'DIVIDE'
 "-"                   return 'MINUS'
@@ -49,8 +48,7 @@
 "var"                 return 'VAR'
 "const"               return 'CONST'
 "function"            return 'FUNCTION'
-"sync"                return 'SYNC'
-"async"               return 'ASYNC'
+"wait"                return 'WAIT'
 <<EOF>>               return 'EOF'
 [a-zA-Z][a-zA-Z0-9]*  return 'ID'
 .                     return 'INVALID'
@@ -75,124 +73,72 @@ expressions: eList EOF {return $1;}
 empty: /* empty */ {$$ = null;}
 ;
 
-eList: exp eList {$$ = {"type": 'eList', "head" : $1, "tail": $2};}
-| empty {$$ = null;}
+eList: exp SEMICOLON eList /* {$$ = {type: 'exp', next: $3};} */
+| funDec eList /* {$$ = {type: 'funDec', next: $2};} */
+| empty /* {$$ = $1;} */
 ;
 
-exp: dec {$$ = {type: 'dec', body: $1};}
-| op {$$ = {type: 'op', body: $1};}
-| call {$$ = {type: 'call', body: $1};}
+exp: varDec /* {$$ = {type: 'varDec', exp: $1};} */
+| callExp /* {$$ = {type: 'callExp', exp $1};} */
+| op
+| number
+| ID
 ;
 
-call: ID LPAREN callarglist RPAREN
+varDec: varType ID ASSIGN varTarget /* {$$ = {type: 'varAssign', varType: $1, varName: $2, varTarget: $4};} */
+| varType ID /* {$$ = {type: 'varState', varName: $2};} */
 ;
 
-callarglist: empty
-| calltarget callListRec
-;
-
-callListRec: COMMA calltarget callListRec
-| empty
-;
-
-calltarget: optarget
-;
-
-number: NUMBER {$$ = {type: 'number', val: $1};}
-;
-
-op: algop {$$ = {type: 'op', body: $1};}
-|   logop {$$ = {type: 'op', body: $1};}
-|   compop {$$ = {type: 'op', body: $1};}
-;
-
-algopSymbol: PLUS {$$ = 'plus';}
-| MINUS {$$ = 'minus';}
-| MULTIPLY {$$ = 'multiply';}
-| DIVIDE {$$ = 'divide';}
-| PLUSEQ {$$ = 'pluseq';}
-| MINUSEQ {$$ = 'minuseq';}
-| MULTEQ {$$ = 'multeq';}
-| DIVEQ {$$ = 'diveq';}
-;
-
-algopAugment: INCR {$$ = 'incr';}
-| DECR {$$ = 'decr';}
-;
-
-algop: optarget algopSymbol optarget {$$ = {type: 'algop', operation: $2, left: $1, right: $3};}
-|      optarget algopAugment {$$ = {type: 'algop', operation: $2, left: $1};}
-;
-
-logopSymbol: AND {$$ = 'and';}
-| OR {$$ = 'or';}
-;
-
-logop: optarget logopSymbol optarget {$$ = {type: 'logop', operation: $2, left: $1, right: $3};}
-;
-
-compopSymbol: GT {$$ = 'gt';}
-| GTE {$$ = 'gte';}
-| LT {$$ = 'lt';}
-| LTE {$$ = 'lte';}
-| EQ {$$ = 'eq';}
-| NEQ {$$ = 'neq';}
-;
-
-compop: optarget compopSymbol optarget {$$ = {type: 'compop', operation: $2, left: $1, right:$3};}
-;
-
-optarget: number {$$ = $1;}
-|         varid {$$ = $1;}
-;
-
-dec: vardec {$$ = {type: 'vardec', dec_body: $1};}
-| synctype fundec {$$ = {type: 'fundec', dec_type: 'fun', sync: $1, dec_body: $2};}
-| fundec {$$ = {type: 'fundec', dec_type: 'fun', sync: 'async', dec_body: $1};}
-;
-
-synctype: ASYNC {$$ = 'async';}
-| SYNC {$$ = 'sync';}
-;
-
-varScope: VAR {$$ = $1;}
-| LET {$$ = $1;}
+varType: LET {$$ = $1;}
+| VAR {$$ = $1;}
 | CONST {$$ = $1;}
 ;
 
-varDecPrefix: synctype varScope {$$ = {sync: $1, scope: $2};}
-| varScope {$$ = {sync: 'async', scope: $1};}
+varTarget: NULL /* {$$ = {type: 'varTarget', val: null};} */
+| exp 
 ;
 
-vardec: varDecPrefix varexp ASSIGN vartarget {$$ = {type: 'vardec', options: $1, left: $2, right: $4};}
+op: algop;
+
+algop: exp numOper exp;
+
+/* algTarget: number | ID; */
+
+numOper: PLUS | MINUS | MULTIPLY | DIVIDE;
+       
+number: NUMBER;
+
+funDec: FUNCTION ID LPAREN argList RPAREN LBRACE eList returnExp RBRACE
+      | FUNCTION LPAREN argList RPAREN LBRACE eList returnExp RBRACE
 ;
 
-vartarget: optarget {$$ = $1;}
-| exp {$$ = $1;}
+argList: empty
+       | ID recArgList
 ;
 
-varexp: varid {$$ = $1;}
+recArgList: empty
+          | COMMA ID recArgList
 ;
 
-varid: ID {$$ = {type: 'id', val: $1};}
+returnExp: empty
+         | RETURN SEMICOLON
+         | RETURN returnTarget SEMICOLON
 ;
 
-fundec: FUNCTION ID LPAREN arglist RPAREN LBRACE funbody RBRACE {$$ = {id: $2, args: $4, body: $7};}
+returnTarget: number
+            | ID
 ;
 
-funbody: eList returnexp {$$ = {type: 'funbody', body: $1, returnStm: $2};}
+callExp: WAIT ID LPAREN callList RPAREN
+       | ID LPAREN callList RPAREN;
+
+callList: empty
+        | callTarget recCallList
 ;
 
-arglist: empty {$$ = null;}
-|        varid recarglist {$$ = {type: 'argList', head: $1, tail: $2};}
-;
+recCallList: COMMA callTarget recCallList
+           | empty;
 
-recarglist: empty {$$ = null;}
-|           COMMA varid recarglist {$$ = {type: 'argList', head: $2, tail: $3};}
+callTarget: number
+          | ID
 ;
-
-returnexp: RETURN {$$ = {type: 'returnexp', return_val: null};}
-|          RETURN optarget {$$ = {type: 'returnexp', return_val: $2};}
-|          empty {$$ = null;}
-;
-

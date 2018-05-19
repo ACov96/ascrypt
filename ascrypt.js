@@ -9,6 +9,6 @@ if(process.argv.length < 3){
 var input = fs.readFileSync(process.argv[2], 'utf8');
 var parsed_input = parser.parse(input);
 
-//console.log(parsed_input);
+console.log(parsed_input);
 //console.log(parsed_input.head.dec.body);
-translate(parsed_input);
+//translate(parsed_input);
