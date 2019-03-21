@@ -4,7 +4,7 @@
   "description": "A JavaScript dialect design with async first",
   "main": "ascrypt.js",
   "scripts": {
-    "build_grammar": "antlr4 -o src/parser -Dlanguage=JavaScript src/Grammar.g4"
+    "build_grammar": "antlr4 -visitor -o src/parser -Dlanguage=JavaScript src/Grammar.g4"
   },
   "author": "Alexander Covington",
   "license": "ISC",

@@ -2,6 +2,8 @@
 // jshint ignore: start
 var antlr4 = require('antlr4/index');
 var GrammarListener = require('./GrammarListener').GrammarListener;
+var GrammarVisitor = require('./GrammarVisitor').GrammarVisitor;
+
 var grammarFileName = "Grammar.g4";
 
 var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
@@ -107,6 +109,14 @@ StatementListContext.prototype.exitRule = function(listener) {
 	}
 };
 
+StatementListContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof GrammarVisitor ) {
+        return visitor.visitStatementList(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -177,6 +187,14 @@ StatementContext.prototype.exitRule = function(listener) {
 	}
 };
 
+StatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof GrammarVisitor ) {
+        return visitor.visitStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
+};
+
 
 
 
@@ -242,6 +260,14 @@ AssignStatementContext.prototype.exitRule = function(listener) {
     if(listener instanceof GrammarListener ) {
         listener.exitAssignStatement(this);
 	}
+};
+
+AssignStatementContext.prototype.accept = function(visitor) {
+    if ( visitor instanceof GrammarVisitor ) {
+        return visitor.visitAssignStatement(this);
+    } else {
+        return visitor.visitChildren(this);
+    }
 };
 
 

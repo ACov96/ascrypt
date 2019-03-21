@@ -3,6 +3,7 @@ const fs = require('fs');
 const { InputStream, CommonTokenStream } = require('antlr4');
 const { GrammarLexer } = require('./src/parser/src/GrammarLexer');
 const { GrammarParser } = require('./src/parser/src/GrammarParser');
+const { Visitor } = require('./src/visitor');
 
 if (process.argv.length < 3) {
   console.error('Not enough arguments');
@@ -16,3 +17,5 @@ const tokens = new CommonTokenStream(lexer);
 const parser = new GrammarParser(tokens);
 parser.buildParseTrees = true;
 const tree = parser.statementList();
+const ast = tree.accept(new Visitor());
+console.log(ast);
