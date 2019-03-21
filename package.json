@@ -4,12 +4,11 @@
   "description": "A JavaScript dialect design with async first",
   "main": "ascrypt.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build_grammar": "antlr4 -o src/parser -Dlanguage=JavaScript src/Grammar.g4"
   },
   "author": "Alexander Covington",
   "license": "ISC",
   "dependencies": {
-    "jison": "^0.4.18",
-    "lex": "^1.7.9"
+    "antlr4": "^4.7.2"
   }
 }
